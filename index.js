@@ -10,52 +10,40 @@ $(function(){  // $(document).ready shorthand
 });
 
 function delay(ms) {
-   ms += new Date().getTime();
-   while (new Date() < ms){}
+ ms += new Date().getTime();
+ while (new Date() < ms){}
 }
 
 function invert() { 
-  // var css = 'html {-webkit-filter: invert(100%); moz-filter: invert(100%); o-filter: invert(100%); ms-filter: invert(100%); }',
-  var head = document.getElementsByTagName('head')[0],
-  style = document.createElement('style');
-  // if (!window.counter) { window.counter = 1;} else  { window.counter ++;
-  //   if (window.counter % 2 == 0) { var css ='html {-webkit-filter: invert(0%); -moz-filter: invert(0%); -o-filter: invert(0%); -ms-filter: invert(0%); }'}
-  // };
-
   if (!window.counter) {
     window.counter = 1;
   } else {
     window.counter++;
   }
-  var start = 0;
-  var goal = 100;
+  start = 0;
+  goal = 100;
   if (window.counter % 2 == 0) {
     start = 100;
     goal = 0;
   }
-
-    // var css = 'html {-webkit-filter: invert('+75+'%); moz-filter: invert('+75+'%); o-filter: invert('+75+'%); ms-filter: invert('+75+'%); }';
-    // style.type = 'text/css';
-    // if (style.styleSheet){
-    //   style.styleSheet.cssText = css;
-    // } else {
-    //   style.appendChild(document.createTextNode(css));
-    // }
-    // head.appendChild(style);
-  for (i = start; i != goal; i+=(goal-start)/100){
-    var css = 'html {-webkit-filter: invert('+i+'%); moz-filter: invert('+i+'%); o-filter: invert('+i+'%); ms-filter: invert('+i+'%); }';
-    style.type = 'text/css';
+  current = start;
+  var colorUpdate = setInterval(function() {
+    current = current + 8*(goal-start)/100;
+    if (current < 0) current = 0;
+    if (current > 100) current = 100;
+    var css = 'html {-webkit-filter: invert('+current+'%); moz-filter: invert('+current+'%); o-filter: invert('+current+'%); ms-filter: invert('+current+'%); }',
+    head = document.getElementsByTagName('head')[0],
+    style = document.createElement('style');
     if (style.styleSheet){
-      console.log("here");
       style.styleSheet.cssText = css;
     } else {
-      console.log("hereinstead");
       style.appendChild(document.createTextNode(css));
     }
     head.appendChild(style);
-    console.log(i);
-    delay(100);
-  }
+  }, 30 );
+  var finish = setTimeout(function() {
+    clearInterval(colorUpdate);
+  }, 1500);
 }
 
 function flip() {

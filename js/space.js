@@ -26,16 +26,18 @@ var Ray = function(length, angle) {
 	this.line.strokeWidth = rayWidth;
 };
 
-Ray.prototype.iterate = function() {
-	this.line.translate(this.offset);	
-}
+Ray.prototype = {
+	iterate: function() {
+		this.line.translate(this.offset);	
+	},
 
-Ray.prototype.isVisible = function() {
-	return (view.bounds.contains(this.line.getPointAt(0)));
-}
+	isVisible: function() {
+		return (view.bounds.contains(this.line.getPointAt(0)));
+	},
 
-Ray.prototype.delete = function() {
-	this.line.remove();
+	delete: function() {
+		this.line.remove();
+	}
 }
 
 // ---------------------------------------------------
@@ -47,25 +49,33 @@ var leftLaserStart = view.center;
 var Laser = function(destination) {
 	this.updateLaserStartPoints();
 
-	this.destinationLeft = new Point(destination.x - view.size.width / 20, destination.y);
-	this.destinationRight = new Point(destination.x + view.size.width / 20, destination.y);
+	this.destinationLeft = new Point(destination.x - view.size.width / 30, destination.y);
+	this.destinationRight = new Point(destination.x + view.size.width / 30, destination.y);
 
 	this.beamLeft = new Beam(leftLaserStart, this.destinationLeft);
 	this.beamRight = new Beam(rightLaserStart, this.destinationRight);
 }
 
-Laser.prototype.iterate = function() {
-	this.beamLeft.iterate();
-	this.beamRight.iterate();
-}
+Laser.prototype = {
+	iterate: function() {
+		this.beamLeft.iterate();
+		this.beamRight.iterate();
+	},
 
-Laser.prototype.updateLaserStartPoints = function() {
-	rightLaserStart = new Point(view.center.x + view.size.width / 6, view.center.y + view.size.height / 3);
-	leftLaserStart = new Point(view.center.x - view.size.width / 6, view.center.y + view.size.height / 3);
-}
+	updateLaserStartPoints: function() {
+		rightLaserStart = new Point(view.center.x + view.size.width / 6, view.center.y + view.size.height / 3);
+		leftLaserStart = new Point(view.center.x - view.size.width / 6, view.center.y + view.size.height / 3);
+	},
 
-Laser.prototype.isVisible = function() {
-	return (this.beamRight.endReached && this.beamLeft.endReached);
+	isVisible: function() {
+		return !(this.beamRight.endReached() && this.beamLeft.endReached());
+	},
+
+	delete: function() {
+		this.beamLeft.delete();
+		this.beamRight.delete();
+	}
+
 }
 
 // ---------------------------------------------------
@@ -92,13 +102,65 @@ var Beam = function(start, destination) {
 	this.line.strokeCap = 'round';
 }
 
-Beam.prototype.endReached = function() {
-	return (this.line.strokeWidth <= 0);
+Beam.prototype = {
+	endReached: function() {
+		return (this.line.strokeWidth <= 0);
+	},
+
+	iterate: function() {
+		this.line.translate(this.offset);
+		this.line.strokeWidth = this.line.strokeWidth - (beamStartWidth - beamEndWidth) / beamNumFrames;	
+	},
+
+	delete: function() {
+		this.line.remove();
+	}
 }
 
-Beam.prototype.iterate = function() {
-	this.line.translate(this.offset);
-	this.line.strokeWidth = this.line.strokeWidth - (beamStartWidth - beamEndWidth) / beamNumFrames;
+// ---------------------------------------------------
+//  Asteroid
+// ---------------------------------------------------
+var asteroidMaxStartRadius = 20;
+var asteroidMinStartRadius = 5;
+var asteroidColor = '#a67d3d';
+var asteroidOpacity = 0.7;
+var asteroidMinNumFrames = 40;
+var asteroidMaxNumFrames = 120;
+var asteroidEndScale = 5;
+
+var Asteroid = function(origin, radius, numFrames) {
+	this.endRadius = asteroidEndScale * radius;
+	this.currentRadius = radius;
+	this.stepScale = Math.pow(asteroidEndScale, 1 / numFrames);
+	this.shape = new Path.Circle(origin, radius);
+	this.shape.fillColor = asteroidColor;
+	this.shape.strokeColor = asteroidColor
+	this.shape.opacity = asteroidOpacity;
+}
+
+Asteroid.prototype = {
+	isVisible: function() {
+		return this.currentRadius <= this.endRadius;
+	},
+
+	iterate: function() {
+		this.currentRadius = this.currentRadius * this.stepScale;
+		this.shape.scale(this.stepScale);
+	},
+
+	delete: function() {
+		this.shape.remove();
+	},
+
+	explode: function() {
+		console.log("exploded");
+		this.delete();
+	},
+
+	collides: function(laser) {
+		return (this.shape.contains(laser.beamLeft.line.getPointAt(laser.beamLeft.line.length)) ||
+			this.shape.contains(laser.beamRight.line.getPointAt(laser.beamRight.line.length)));
+	}
 }
 
 // ---------------------------------------------------
@@ -108,15 +170,23 @@ var rays = [];
 var scopeCenter = view.center;
 var goalViewCenter = view.center;
 var lasers = [];
+var asteroids = [];
+var asteroidProbability = 0;
 
 // ---------------------------------------------------
 //  Events
 // ---------------------------------------------------
 function onFrame() {
+	checkLaserAsteroidCollisions();
+	updateAsteroidProbability();
+	createAsteroids();
 	updateScope();
-	createNewRays();
+	for (var i = 0; i < numRaysPerFrame; i++) {
+		createRandomRay();
+	}
 	updateRays();
 	updateLasers();
+	updateAsteroids();
 }
 
 function onMouseMove(event) {
@@ -136,6 +206,51 @@ function onKeyUp(event) {
 // ---------------------------------------------------
 //  Helpers
 // ---------------------------------------------------
+function checkLaserAsteroidCollisions() {
+	asteroidsNext = [];
+	for (var i = 0; i < asteroids.length; i++) {
+		if (lasers[0]) {
+			if (asteroids[i].collides(lasers[0])) {
+				asteroids[i].explode();
+				lasers[0].delete();
+				lasers.splice(0,1);
+				asteroids.splice(i, 1);
+			}
+		}
+	}
+}
+
+function updateAsteroidProbability() {
+	asteroidProbability = asteroidProbability + .001;
+}
+
+function createAsteroids() {
+	if (Math.random() < asteroidProbability) {
+		var origin = new Point(randomNumInRange(view.center.x - view.size.width / 3, view.center.x + view.size.width / 3), 
+			randomNumInRange(view.center.y - view.size.height / 3, view.center.y + view.size.height / 3));
+		var asteroid = new Asteroid(
+			origin, 
+			randomNumInRange(asteroidMinStartRadius, asteroidMaxStartRadius), 
+			randomNumInRange(asteroidMinNumFrames, asteroidMaxNumFrames)
+			);
+		asteroids.push(asteroid);
+		asteroidProbability = -.05;
+	}
+}
+
+function updateAsteroids() {
+	var asteroidsNext = [];
+	for (var i = 0, l = asteroids.length; i < l; i++) {
+		if (asteroids[i].isVisible()) {
+			asteroids[i].iterate();
+			asteroidsNext.push(asteroids[i]);
+		} else {
+			asteroids[i].delete();
+		}
+	}
+	asteroids = asteroidsNext;
+}
+
 function shootLasers() {
 	var laser = new Laser(scopeCenter);
 	lasers.push(laser);
@@ -163,11 +278,9 @@ function updateScope() {
 	}
 }
 
-function createNewRays() {
-	for (var i = 0; i < numRaysPerFrame; i++) {
-		var ray = new Ray(randomRayLength(), randomAngle());
-		rays.push(ray);
-	}
+function createRandomRay() {
+	var ray = new Ray(randomNumInRange(rayMinLength, rayMaxLength), randomAngle());
+	rays.push(ray);
 }
 
 function updateRays() {
@@ -183,11 +296,13 @@ function updateRays() {
 	rays = raysNext;
 }
 
-function randomRayLength() {
-	return Math.random() * (rayMaxLength - rayMinLength) + rayMinLength;
-}
-
+// ---------------------------------------------------
+//  Math Helpers
+// ---------------------------------------------------
 function randomAngle() {
-	return Math.PI * 2 * Math.random();
+	return Math.random() * 2 * Math.PI;
 }
 
+function randomNumInRange(min, max) {
+	return min + (max - min) * Math.random();
+}

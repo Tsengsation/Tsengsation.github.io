@@ -4,12 +4,15 @@ body {
 
 a {
   color: black; 
+  position: relative;
+  z-index: 2;
 }
 a:hover {
   color: gray;
 }
 
 #spaceCanvas {
+  z-index: 1;
   position: fixed;
 }
 
@@ -31,4 +34,15 @@ a:hover {
   background-size: cover;
   padding-top: 5rem;
   padding-bottom: 5rem;
+}
+
+.contact {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  position: relative;
+  z-index: 2;
 }

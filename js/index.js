@@ -9,10 +9,10 @@ $(function(){  // $(document).ready shorthand
   });
 });
 
-function delay(ms) {
- ms += new Date().getTime();
- while (new Date() < ms){}
-}
+// disable space to scroll
+window.onkeydown = function(e) { 
+  return !(e.keyCode == 32);
+};
 
 function invert() { 
   if (!window.counter) {

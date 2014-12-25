@@ -9,6 +9,10 @@ a:hover {
   color: gray;
 }
 
+#spaceCanvas {
+  position: fixed;
+}
+
 /* Sections
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 .section {

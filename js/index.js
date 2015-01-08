@@ -1,16 +1,23 @@
 $(function(){  // $(document).ready shorthand
-  rotateCount = 0;
-  setInterval("rotateInfoText()", 4000);
-  rotateInfoText();
-  $('#hello').hide().fadeIn('slow').delay(1000).fadeOut('slow');
-  $('#welcome-message').hide().delay(2500).fadeIn('slow').delay(1000).fadeOut('slow');
-  $('#welcome').hide().delay(5000).fadeIn('slow');
-  $('#info').hide().delay(6000).fadeIn('slow');
-  $('#references').hide().delay(7000).slideDown('slow');
-  $('#credits').hide().delay(7000).fadeIn('slow');
-  // $('#invert').click(function(){
-  //   invert();
-  // });
+  $('#welcome-message').hide();
+  $('#info').hide();
+  $('#references').hide();
+  $('#credits').hide();
+  $('#hello').hide().fadeIn('slow', function() {
+    $('#hello').delay(1000).fadeOut('slow', function() {
+      $('#welcome-message').fadeIn('slow', function() {
+        $('#welcome-message').delay(1000).fadeOut('slow', function() {
+          $('#info').delay(1000).fadeIn('slow', function() {
+            $('#references').delay(1000).slideDown('slow');
+            $('#credits').delay(1000).fadeIn('slow', function() {
+              rotateCount = 0;
+              setInterval("rotateInfoText()", 4000);
+            });
+          });
+        });
+      });
+    });
+  });
 });
 
 var rotateCount;
@@ -26,20 +33,6 @@ function rotateInfoText() {
     rotateCount = 0;
   }
 }
-
-jQuery.fn.visible = function() {
-  return this.css('visibility', 'visible');
-};
-
-jQuery.fn.invisible = function() {
-  return this.css('visibility', 'hidden');
-};
-
-jQuery.fn.visibilityToggle = function() {
-  return this.css('visibility', function(i, visibility) {
-    return (visibility == 'visible') ? 'hidden' : 'visible';
-  });
-};
 
 // disable space to scroll
 // window.onkeydown = function(e) { 

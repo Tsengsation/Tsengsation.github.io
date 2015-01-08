@@ -7,4 +7,4 @@ It was made using [skeleton](http://www.getskeleton.com). Interactivity was adde
 
 Feel free to contact me with any questions/concerns.
 
-Last updated December 25th, 2014.
+Last updated January 7th, 2014.

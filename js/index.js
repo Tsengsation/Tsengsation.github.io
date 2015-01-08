@@ -1,18 +1,50 @@
 $(function(){  // $(document).ready shorthand
+  rotateCount = 0;
+  setInterval("rotateInfoText()", 4000);
+  rotateInfoText();
   $('#hello').hide().fadeIn('slow').delay(1000).fadeOut('slow');
-  $('#welcome').hide().delay(3000).fadeIn('slow');
-  $('#info').hide().delay(4000).fadeIn('slow');
-  $('#references').hide().delay(5000).slideDown('slow');
-  $('#credits').hide().delay(5000).fadeIn('slow');
-  $('#invert').click(function(){
-    invert();
-  });
+  $('#welcome-message').hide().delay(2500).fadeIn('slow').delay(1000).fadeOut('slow');
+  $('#welcome').hide().delay(5000).fadeIn('slow');
+  $('#info').hide().delay(6000).fadeIn('slow');
+  $('#references').hide().delay(7000).slideDown('slow');
+  $('#credits').hide().delay(7000).fadeIn('slow');
+  // $('#invert').click(function(){
+  //   invert();
+  // });
 });
 
-// disable space to scroll
-window.onkeydown = function(e) { 
-  return !(e.keyCode == 32);
+var rotateCount;
+var rotateTexts = ["duke university student", "pun enthusiast", "sitcom aficionado", "multilingual typist"];
+
+function rotateInfoText() {
+  $('#info').fadeOut('slow', function() {
+    $('#info').text(rotateTexts[rotateCount]);
+    $('#info').fadeIn('slow');
+  });
+  rotateCount++;
+  if (rotateCount >= rotateTexts.length) {
+    rotateCount = 0;
+  }
+}
+
+jQuery.fn.visible = function() {
+  return this.css('visibility', 'visible');
 };
+
+jQuery.fn.invisible = function() {
+  return this.css('visibility', 'hidden');
+};
+
+jQuery.fn.visibilityToggle = function() {
+  return this.css('visibility', function(i, visibility) {
+    return (visibility == 'visible') ? 'hidden' : 'visible';
+  });
+};
+
+// disable space to scroll
+// window.onkeydown = function(e) { 
+//   return !(e.keyCode == 32);
+// };
 
 function invert() { 
   if (!window.counter) {
